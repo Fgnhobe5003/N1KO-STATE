@@ -22,3 +22,7 @@ Package.resolved
 # Logs & temp
 *.log
 /tmp/
+
+# Internal planning docs (not for public repo)
+REFACTOR_PLAN.md
+REFACTOR_PLAN_V2.md

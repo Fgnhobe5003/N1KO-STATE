@@ -30,6 +30,17 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Built%20with-AI%20Vibecoding-8B5CF6?style=for-the-badge&logo=dependabot&logoColor=white" alt="Built with AI Vibecoding" />
+</p>
+
+<p align="center">
+  <sub>
+    An <strong>AI vibecoding</strong> project by <a href="https://github.com/baogutang">baogutang</a> — product intent meets AI-assisted Swift/macOS development.<br/>
+    作者 <strong>AI vibecoding</strong> 作品：从架构设计到原生界面，人机协作快速迭代。
+  </sub>
+</p>
+
 ---
 
 ## English
@@ -164,17 +175,72 @@ cd N1KO-STATE
 ## Star History / Star 趋势
 
 <p align="center">
+  <a href="https://github.com/baogutang/N1KO-STATE/stargazers">
+    <img src="https://img.shields.io/github/stars/baogutang/N1KO-STATE?style=for-the-badge&logo=github&label=Stars" alt="GitHub Stars" />
+  </a>
+</p>
+
+<p align="center">
   <a href="https://star-history.com/#baogutang/N1KO-STATE&Date">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=baogutang/N1KO-STATE&type=Date&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=baogutang/N1KO-STATE&type=Date" />
-      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=baogutang/N1KO-STATE&type=Date" width="600" />
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=baogutang/N1KO-STATE&type=date&theme=dark&legend=top-left&v=2" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=baogutang/N1KO-STATE&type=date&legend=top-left&v=2" />
+      <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=baogutang/N1KO-STATE&type=date&legend=top-left&v=2" width="600" />
     </picture>
   </a>
 </p>
 
 <p align="center">
+  <sub>
+    Live star count above · chart may lag a few hours (GitHub image cache) · click chart for interactive view<br/>
+    上方徽章为实时 Star 数 · 趋势图因 GitHub 缓存可能延迟更新 · 点击图表可查看交互版<br/>
+    Title avatar may not render in README (GitHub blocks external images inside proxied SVG) · 标题处头像在 README 中可能无法显示
+  </sub>
+</p>
+
+<p align="center">
   <sub>If this project helps you, a ⭐ on GitHub is appreciated · 若对你有帮助，欢迎点个 Star ⭐</sub>
+</p>
+
+---
+
+## ⚡ N1KO API · From the Author / 作者的其他作品
+
+<p align="center">
+  <a href="https://token.baogutang.top">
+    <img src="https://img.shields.io/badge/N1KO%20API-一个密钥%20·%20无限模型-0D9488?style=for-the-badge&logo=serverless&logoColor=white" alt="N1KO API" />
+  </a>
+</p>
+
+<p align="center">
+  <strong>One key · Claude · GPT · Gemini · 16+ models</strong><br/>
+  <strong>OpenAI-compatible endpoint · pay-as-you-go · low latency</strong>
+</p>
+
+<p align="center">
+  <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Claude-3.5%20Sonnet-7C3AED?style=flat-square" alt="Claude" /></a>
+  <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/GPT--4o-✓-10A981?style=flat-square" alt="GPT-4o" /></a>
+  <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Gemini-1.5%20Pro-3B82F6?style=flat-square" alt="Gemini" /></a>
+  <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/OpenAI-Compatible-06B6D4?style=flat-square" alt="OpenAI Compatible" /></a>
+  <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Uptime-99.9%25-22C55E?style=flat-square" alt="99.9% uptime" /></a>
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="420">
+      <br/>
+      <strong>🚀 Unified LLM gateway for builders</strong><br/>
+      <sub>Drop-in <code>base_url</code> swap — same SDK, every frontier model.<br/>
+      统一中转 · OpenAI 格式 · 按量计费 · 稳定低延迟</sub>
+      <br/><br/>
+      <a href="https://token.baogutang.top"><strong>token.baogutang.top → Get Started</strong></a>
+      <br/><br/>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <sub>Also built with AI vibecoding · 同样是 AI vibecoding 驱动的产品</sub>
 </p>
 
 ---
