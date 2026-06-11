@@ -17,8 +17,7 @@
         <tr>
           <td align="center" bgcolor="#0d1117" style="border: 2px solid #10b981; border-radius: 16px; padding: 28px 24px;">
             <a href="https://token.baogutang.top">
-              <img src="https://img.shields.io/badge/作者出品-N1KO%20API-064e3b?style=flat-square&logoColor=white" alt="作者出品" />
-              <img src="https://img.shields.io/badge/大模型%20API%20中转站-10b981?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="N1KO API" />
+              <img src="https://img.shields.io/badge/作者出品-N1KO%20API%20·%20大模型%20API%20中转站-10b981?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="N1KO API · 大模型 API 中转站" />
             </a>
             <br/><br/>
             <strong>一个 API Key · 各家最新旗舰大模型 · OpenAI 兼容</strong><br/>
@@ -35,20 +34,19 @@
             <br/>
             <sub>旗舰模型 · Frontier Models</sub>
             <br/><br/>
-            <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Claude-Opus%204.8-7C3AED?style=flat-square&logo=anthropic&logoColor=white" alt="Claude Opus 4.8" /></a>
+            <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Claude-claude--fable--5-7C3AED?style=flat-square&logo=anthropic&logoColor=white" alt="claude-fable-5" /></a>
             <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/GPT-5.5-10A981?style=flat-square&logo=openai&logoColor=white" alt="GPT-5.5" /></a>
-            <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Gemini-3.5%20Pro-3B82F6?style=flat-square&logo=google&logoColor=white" alt="Gemini 3.5 Pro" /></a>
+            <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Gemini-3.1%20Pro-3B82F6?style=flat-square&logo=google&logoColor=white" alt="Gemini 3.1 Pro" /></a>
+            <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/Gemini-3.5%20Flash-2563EB?style=flat-square&logo=google&logoColor=white" alt="Gemini 3.5 Flash" /></a>
             <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/更多-16%2B-475569?style=flat-square" alt="16+ models" /></a>
             <a href="https://token.baogutang.top"><img src="https://img.shields.io/badge/按量计费-灵活省钱-06B6D4?style=flat-square" alt="Pay as you go" /></a>
             <br/><br/>
-            <a href="https://token.baogutang.top">
-              <img src="https://img.shields.io/badge/免费注册_·_立即接入-10b981?style=for-the-badge&logo=rocket&logoColor=white" alt="免费注册 · 立即接入" />
-            </a>
-            &nbsp;
-            <a href="https://token.baogutang.top">
-              <img src="https://img.shields.io/badge/查看文档-21262d?style=for-the-badge&logo=readthedocs&logoColor=white" alt="查看文档" />
-            </a>
-            <br/><br/>
+            <p align="center">
+              <a href="https://token.baogutang.top">
+                <img src="https://img.shields.io/badge/免费注册_·_立即接入-10b981?style=for-the-badge&logo=rocket&logoColor=white" alt="免费注册 · 立即接入" />
+              </a>
+            </p>
+            <br/>
           </td>
         </tr>
       </table>
