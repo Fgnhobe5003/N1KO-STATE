@@ -1,8 +1,8 @@
 <p align="center">
-  <code>N1KO</code><strong>STATE</strong>
+  <a href="https://github.com/baogutang/N1KO-STATE">
+    <img src="docs/assets/readme-banner.jpg" alt="N1KO-STATE — Native macOS System Monitor" width="100%" />
+  </a>
 </p>
-
-<h1 align="center">N1KO-STATE</h1>
 
 <p align="center">
   <strong>A lightweight, native macOS menu bar system monitor.</strong><br/>
@@ -19,6 +19,15 @@
   <img src="https://img.shields.io/badge/Swift-5.9-F05138?style=flat-square&logo=swift&logoColor=white" alt="Swift 5.9" />
   <img src="https://img.shields.io/badge/version-1.0.1-blue?style=flat-square" alt="1.0.1" />
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/baogutang/N1KO-STATE/stargazers">
+    <img src="https://img.shields.io/github/stars/baogutang/N1KO-STATE?style=social" alt="GitHub stars" />
+  </a>
+  <a href="https://github.com/baogutang/N1KO-STATE/releases">
+    <img src="https://img.shields.io/github/v/release/baogutang/N1KO-STATE?style=social&label=Release" alt="Latest release" />
+  </a>
 </p>
 
 ---
@@ -149,6 +158,24 @@ cd N1KO-STATE
 ### 致谢
 
 - [SMCKit](https://github.com/beltex/SMCKit) — MIT © 2014–2017 beltex（本地 vendored）
+
+---
+
+## Star History / Star 趋势
+
+<p align="center">
+  <a href="https://star-history.com/#baogutang/N1KO-STATE&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=baogutang/N1KO-STATE&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=baogutang/N1KO-STATE&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=baogutang/N1KO-STATE&type=Date" width="600" />
+    </picture>
+  </a>
+</p>
+
+<p align="center">
+  <sub>If this project helps you, a ⭐ on GitHub is appreciated · 若对你有帮助，欢迎点个 Star ⭐</sub>
+</p>
 
 ---
 
