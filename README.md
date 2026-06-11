@@ -179,6 +179,26 @@ cd N1KO-STATE
 
 ---
 
+## ☕ Buy me a coffee / 请作者喝杯咖啡
+
+<p align="center">
+  <strong>N1KO-STATE</strong> is free and open source. If it saves you time or keeps your Mac running smoothly,<br/>
+  consider buying the author a coffee — every bit of support helps keep the project alive.<br/>
+  <br/>
+  <strong>N1KO-STATE</strong> 免费开源。若它帮你省下了时间、或让你更安心地掌握 Mac 状态，<br/>
+  欢迎请作者喝杯咖啡，你的支持是我持续维护的动力 ☕
+</p>
+
+<p align="center">
+  <img src="docs/assets/alipay-donate.png" alt="Alipay donation QR code for Nikooh" width="240" />
+</p>
+
+<p align="center">
+  <sub>Scan with Alipay · 支付宝扫一扫 · Account: Nikooh</sub>
+</p>
+
+---
+
 <p align="center">
   <sub>N1KO-STATE · v1.0.1 · Made for macOS power users who want clarity without clutter.</sub>
 </p>
