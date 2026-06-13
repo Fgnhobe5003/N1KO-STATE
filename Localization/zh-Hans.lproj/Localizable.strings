@@ -9,17 +9,23 @@
 /* CPU 卡片 */
 "Load 1m" = "负载 1分";
 "Load 5m" = "负载 5分";
+"Load" = "负载";
+"Cores" = "核心";
 "Uptime" = "运行时间";
 "Freq" = "频率";
 "Top Processes" = "占用最高进程";
 
 /* 内存卡片 */
 "USED" = "已用";
+"Used" = "已用";
 "App" = "应用";
 "Wired" = "联动内存";
 "Compressed" = "已压缩";
 "Free" = "空闲";
 "Pressure" = "内存压力";
+"State" = "状态";
+"Peak" = "峰值";
+"RPM" = "转速";
 "Swap Used" = "交换已用";
 "Swap Total" = "交换总量";
 "Total RAM" = "内存总量";
@@ -76,6 +82,7 @@
 /* 标题栏 / 菜单操作 */
 "Settings" = "设置";
 "Settings…" = "设置…";
+"Check for Updates…" = "检查更新…";
 "Quit N1KO-STATE" = "退出 N1KO-STATE";
 
 /* 设置 — 标签页 */
@@ -112,6 +119,12 @@
 "Metrics" = "指标";
 "Layout" = "布局";
 "Compact (combine into one readout)" = "紧凑（合并为一个读数）";
+"Standard" = "标准";
+"Compact" = "紧凑";
+"Stacked" = "双层";
+"Minimal" = "极简";
+"Preview" = "预览";
+"Reset Menu Bar" = "恢复菜单栏默认";
 "CPU usage" = "CPU 占用";
 "GPU usage" = "GPU 占用";
 "Memory usage" = "内存占用";
@@ -196,6 +209,7 @@
 "Back" = "上一步";
 "Continue" = "继续";
 "Get Started" = "开始使用";
+"Finish Setup" = "完成并关闭";
 "About N1KO-STATE" = "关于 N1KO-STATE";
 "No discrete GPU metrics on this device." = "此设备不提供独立 GPU 指标。";
 "No fan sensors on this device." = "此设备不提供风扇传感器。";
@@ -213,6 +227,16 @@
 "Could not terminate “%@” — permission denied." = "无法结束“%@”——权限不足。";
 "Export Diagnostic Report" = "导出诊断报告";
 "Saved to %@" = "已保存到 %@";
+"Activation Required" = "需要激活";
+"Enter your redemption code to activate this version." = "请输入兑换码以激活此版本。";
+"Redemption Code" = "兑换码";
+"Activate" = "激活";
+"License server is not configured." = "授权服务器尚未配置。";
+"Enter a redemption code." = "请输入兑换码。";
+"License server returned an invalid response." = "授权服务器返回了无效响应。";
+"License token is invalid." = "授权令牌无效。";
+"License has expired." = "授权已过期。";
+"License server rejected the code." = "授权服务器拒绝了该兑换码。";
 "Fan Curve" = "风扇曲线";
 "Automatic fan curve" = "自动风扇曲线";
 "Adjust fan speed from peak temperature. Manual control is disabled while the curve is active." = "根据峰值温度调节风扇转速。曲线启用时禁用手动控制。";

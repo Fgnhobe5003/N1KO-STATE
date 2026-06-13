@@ -9,17 +9,23 @@
 /* CPU card */
 "Load 1m" = "Load 1m";
 "Load 5m" = "Load 5m";
+"Load" = "Load";
+"Cores" = "Cores";
 "Uptime" = "Uptime";
 "Freq" = "Freq";
 "Top Processes" = "Top Processes";
 
 /* Memory card */
 "USED" = "USED";
+"Used" = "Used";
 "App" = "App";
 "Wired" = "Wired";
 "Compressed" = "Compressed";
 "Free" = "Free";
 "Pressure" = "Pressure";
+"State" = "State";
+"Peak" = "Peak";
+"RPM" = "RPM";
 "Swap Used" = "Swap Used";
 "Swap Total" = "Swap Total";
 "Total RAM" = "Total RAM";
@@ -76,6 +82,7 @@
 /* Header / menu actions */
 "Settings" = "Settings";
 "Settings…" = "Settings…";
+"Check for Updates…" = "Check for Updates…";
 "Quit N1KO-STATE" = "Quit N1KO-STATE";
 
 /* Settings — tabs */
@@ -112,6 +119,12 @@
 "Metrics" = "Metrics";
 "Layout" = "Layout";
 "Compact (combine into one readout)" = "Compact (combine into one readout)";
+"Standard" = "Standard";
+"Compact" = "Compact";
+"Stacked" = "Stacked";
+"Minimal" = "Minimal";
+"Preview" = "Preview";
+"Reset Menu Bar" = "Reset Menu Bar";
 "CPU usage" = "CPU usage";
 "GPU usage" = "GPU usage";
 "Memory usage" = "Memory usage";
@@ -184,6 +197,7 @@
 "Back" = "Back";
 "Continue" = "Continue";
 "Get Started" = "Get Started";
+"Finish Setup" = "Finish Setup";
 "About N1KO-STATE" = "About N1KO-STATE";
 "Active" = "Active";
 "Appearance" = "Appearance";
@@ -211,6 +225,16 @@
 "Could not terminate “%@” — permission denied." = "Could not terminate “%@” — permission denied.";
 "Export Diagnostic Report" = "Export Diagnostic Report";
 "Saved to %@" = "Saved to %@";
+"Activation Required" = "Activation Required";
+"Enter your redemption code to activate this version." = "Enter your redemption code to activate this version.";
+"Redemption Code" = "Redemption Code";
+"Activate" = "Activate";
+"License server is not configured." = "License server is not configured.";
+"Enter a redemption code." = "Enter a redemption code.";
+"License server returned an invalid response." = "License server returned an invalid response.";
+"License token is invalid." = "License token is invalid.";
+"License has expired." = "License has expired.";
+"License server rejected the code." = "License server rejected the code.";
 "Fan Curve" = "Fan Curve";
 "Automatic fan curve" = "Automatic fan curve";
 "Adjust fan speed from peak temperature. Manual control is disabled while the curve is active." = "Adjust fan speed from peak temperature. Manual control is disabled while the curve is active.";

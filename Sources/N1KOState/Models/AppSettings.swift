@@ -71,9 +71,36 @@ final class AppSettings: ObservableObject {
     @Published var menuBattery: Bool { didSet { d.set(menuBattery, forKey: K.mBat) } }
     /// Compact menu-bar widget: drop the chip backgrounds and tighten spacing so
     /// the metrics read as one aggregated readout instead of separate chips.
-    @Published var menuCompact: Bool { didSet { d.set(menuCompact, forKey: K.mCompact) } }
+    @Published var menuCompact: Bool {
+        didSet {
+            d.set(menuCompact, forKey: K.mCompact)
+            if menuCompact, menuBarLayout == MenuBarLayout.standard.rawValue {
+                menuBarLayout = MenuBarLayout.compact.rawValue
+            } else if !menuCompact, menuBarLayout == MenuBarLayout.compact.rawValue {
+                menuBarLayout = MenuBarLayout.standard.rawValue
+            }
+        }
+    }
+    /// Menu-bar rendering mode. Keeps the legacy `menuCompact` key in sync so
+    /// older installs and downgraded builds retain a sensible appearance.
+    @Published var menuBarLayout: String {
+        didSet {
+            let layout = MenuBarLayout.normalized(menuBarLayout, legacyCompact: menuCompact)
+            if layout.rawValue != menuBarLayout {
+                menuBarLayout = layout.rawValue
+                return
+            }
+            d.set(menuBarLayout, forKey: K.mLayout)
+            let compact = layout == .compact
+            if menuCompact != compact { menuCompact = compact }
+        }
+    }
     /// Display order of menu-bar metrics (raw values of `MenuBarMetric`).
     @Published var menuBarOrder: [String] { didSet { d.set(menuBarOrder, forKey: K.mOrder) } }
+
+    var resolvedMenuBarLayout: MenuBarLayout {
+        MenuBarLayout.normalized(menuBarLayout, legacyCompact: menuCompact)
+    }
 
     var orderedMenuBarMetrics: [MenuBarMetric] {
         var seen = Set<String>()
@@ -154,7 +181,6 @@ final class AppSettings: ObservableObject {
             K.cBat: true,
             K.cOrder: Module.allCases.map { $0.rawValue },
             K.mCPU: true, K.mGPU: true, K.mMem: false, K.mNet: false,             K.mBat: false,
-            K.mCompact: false,
             K.mOrder: MenuBarMetric.allCases.map(\.rawValue),
             K.popStyle: "cards",
             K.chartRange: "1m",
@@ -185,7 +211,11 @@ final class AppSettings: ObservableObject {
         menuMemory = d.bool(forKey: K.mMem)
         menuNetwork = d.bool(forKey: K.mNet)
         menuBattery = d.bool(forKey: K.mBat)
-        menuCompact = d.bool(forKey: K.mCompact)
+        let storedMenuCompact = d.bool(forKey: K.mCompact)
+        let storedMenuLayout = MenuBarLayout
+            .normalized(d.object(forKey: K.mLayout) as? String, legacyCompact: storedMenuCompact)
+        menuCompact = storedMenuLayout == .compact
+        menuBarLayout = storedMenuLayout.rawValue
         menuBarOrder = (d.array(forKey: K.mOrder) as? [String]) ?? MenuBarMetric.allCases.map(\.rawValue)
         popoverStyle = d.string(forKey: K.popStyle) ?? "cards"
         chartTimeRange = d.string(forKey: K.chartRange) ?? "1m"
@@ -225,7 +255,8 @@ final class AppSettings: ObservableObject {
         static let cBat = "showBattery"
         static let cOrder = "moduleOrder"
         static let mCPU = "menuCPU", mGPU = "menuGPU", mMem = "menuMemory", mNet = "menuNetwork"
-        static let mBat = "menuBattery", mCompact = "menuCompact", mOrder = "menuBarOrder"
+        static let mBat = "menuBattery", mCompact = "menuCompact"
+        static let mLayout = "menuBarLayout", mOrder = "menuBarOrder"
         static let popStyle = "popoverStyle", chartRange = "chartTimeRange"
         static let fanCurveOn = "fanCurveEnabled", fanCurve = "fanCurveJSON"
         static let appTheme = "appTheme"

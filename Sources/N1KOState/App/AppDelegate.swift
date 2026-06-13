@@ -5,9 +5,18 @@ import UserNotifications
 /// Owns the shared monitor hub, menu-bar status item, and popover.
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, NSPopoverDelegate {
 
+    private enum PopoverOpenMode {
+        case click
+        case hover
+    }
+
     let hub = MonitorHub()
     private var menuBar: MenuBarStatusController!
     private let popover = NSPopover()
+    private var popoverEventMonitors: [Any] = []
+    private var popoverOpenMode: PopoverOpenMode?
+    private var hoverOpenWorkItem: DispatchWorkItem?
+    private var hoverCloseWorkItem: DispatchWorkItem?
 
     /// `atexit` can't capture `self`; route the last-ditch reset through a
     /// process-global weak reference. This is a best-effort backstop only — the
@@ -34,6 +43,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         hub.start()
         setupMenuBar()
         setupPopover()
+        UpdateController.shared.start()
+        LicenseService.shared.refresh()
 
         // Bug-1: initialise UI from the real SMC FS! value (not any persisted
         // preference), and re-sync after the machine wakes from sleep.
@@ -50,6 +61,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 NSApp.activate(ignoringOtherApps: true)
                 OnboardingWindowController.shared.show(hub: self.hub)
             }
+        } else {
+            DispatchQueue.main.async {
+                LicenseWindowController.shared.showIfNeeded()
+            }
         }
         hub.fans.refreshHelperStatus()
     }
@@ -64,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard !cur.bool(forKey: "didMigrateV1") else { return }
         if let old = UserDefaults(suiteName: "com.n1kostate.menubar.app2026") {
             let keys = ["menuCPU", "menuGPU", "menuMemory", "menuNetwork",
-                        "menuBattery", "menuCompact", "popoverStyle", "refreshInterval",
+                        "menuBattery", "menuCompact", "menuBarLayout", "popoverStyle", "refreshInterval",
                         "accentHex", "useFahrenheit", "sensorsDetailed",
                         "language", "showCPU", "showGPU", "showMemory",
                         "showDisk", "showNetwork", "showSensors", "showBattery",
@@ -83,6 +98,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private func setupMenuBar() {
         menuBar = MenuBarStatusController(hub: hub)
         menuBar.onClick = { [weak self] in self?.togglePopover() }
+        menuBar.onHoverStart = { [weak self] in self?.scheduleHoverPopoverOpen() }
+        menuBar.onHoverEnd = { [weak self] in self?.scheduleHoverPopoverClose() }
         menuBar.install()
     }
 
@@ -93,6 +110,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func popoverDidClose(_ notification: Notification) {
+        stopPopoverEventMonitoring()
+        cancelHoverWork()
+        popoverOpenMode = nil
         popover.contentViewController = nil
         hub.setPopoverVisible(false)
     }
@@ -101,24 +121,142 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard let button = menuBar.statusItem.button else { return }
 
         if NSApp.currentEvent?.type == .rightMouseUp {
+            closePopoverIfShown()
             showContextMenu(from: button)
             return
         }
 
+        guard LicenseService.shared.isUnlocked else {
+            closePopoverIfShown()
+            LicenseWindowController.shared.showIfNeeded()
+            return
+        }
+
         if popover.isShown {
-            hub.setPopoverVisible(false)
-            popover.performClose(nil)
+            if popoverOpenMode == .hover {
+                popoverOpenMode = .click
+                cancelHoverWork()
+                startPopoverEventMonitoring()
+                return
+            }
+            closePopoverIfShown()
         } else {
-            let hosting = NSHostingController(rootView: PopoverRootView(hub: hub))
-            popover.contentViewController = hosting
-            hub.setPopoverVisible(true)
+            showPopover(from: button, mode: .click)
+        }
+    }
+
+    private func closePopoverIfShown() {
+        guard popover.isShown else { return }
+        hub.setPopoverVisible(false)
+        popover.performClose(nil)
+        stopPopoverEventMonitoring()
+    }
+
+    private func showPopover(from button: NSStatusBarButton, mode: PopoverOpenMode) {
+        cancelHoverWork()
+        if popover.contentViewController == nil {
+            popover.contentViewController = NSHostingController(rootView: PopoverRootView(hub: hub))
+        }
+        popoverOpenMode = mode
+        hub.setPopoverVisible(true)
+        if !popover.isShown {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
+        startPopoverEventMonitoring()
+    }
+
+    private func scheduleHoverPopoverOpen() {
+        guard !popover.isShown, LicenseService.shared.isUnlocked else { return }
+        hoverCloseWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self,
+                  let button = self.menuBar.statusItem.button,
+                  self.menuBar.isMouseOverStatusItem(),
+                  !self.popover.isShown else { return }
+            self.showPopover(from: button, mode: .hover)
+        }
+        hoverOpenWorkItem?.cancel()
+        hoverOpenWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
+    }
+
+    private func scheduleHoverPopoverClose() {
+        hoverOpenWorkItem?.cancel()
+        guard popoverOpenMode == .hover else { return }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.popoverOpenMode == .hover else { return }
+            if !self.menuBar.isMouseOverStatusItem(), !self.isMouseOverPopover() {
+                self.closePopoverIfShown()
+            } else {
+                self.scheduleHoverPopoverClose()
+            }
+        }
+        hoverCloseWorkItem?.cancel()
+        hoverCloseWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: work)
+    }
+
+    private func cancelHoverWork() {
+        hoverOpenWorkItem?.cancel()
+        hoverCloseWorkItem?.cancel()
+        hoverOpenWorkItem = nil
+        hoverCloseWorkItem = nil
+    }
+
+    private func startPopoverEventMonitoring() {
+        stopPopoverEventMonitoring()
+        let mask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown]
+        if let local = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { [weak self] event in
+            guard let self else { return event }
+            if self.popover.isShown,
+               !self.isEventInsidePopover(event),
+               !self.isEventOnStatusItem(event) {
+                self.closePopoverIfShown()
+            }
+            return event
+        }) {
+            popoverEventMonitors.append(local)
+        }
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.closePopoverIfShown()
+            }
+        }) {
+            popoverEventMonitors.append(global)
+        }
+    }
+
+    private func stopPopoverEventMonitoring() {
+        for monitor in popoverEventMonitors {
+            NSEvent.removeMonitor(monitor)
+        }
+        popoverEventMonitors.removeAll()
+    }
+
+    private func isEventInsidePopover(_ event: NSEvent) -> Bool {
+        guard let popoverWindow = popover.contentViewController?.view.window else { return false }
+        return event.window === popoverWindow
+    }
+
+    private func isMouseOverPopover() -> Bool {
+        guard let window = popover.contentViewController?.view.window else { return false }
+        return window.frame.contains(NSEvent.mouseLocation)
+    }
+
+    private func isEventOnStatusItem(_ event: NSEvent) -> Bool {
+        guard let button = menuBar.statusItem.button,
+              let buttonWindow = button.window,
+              event.window === buttonWindow else { return false }
+        let point = button.convert(event.locationInWindow, from: nil)
+        return button.bounds.contains(point)
     }
 
     private func showContextMenu(from button: NSStatusBarButton) {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Settings".loc, action: #selector(openSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Check for Updates…".loc,
+                                action: #selector(checkForUpdates),
+                                keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About N1KO-STATE".loc, action: #selector(openAbout), keyEquivalent: ""))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit N1KO-STATE".loc, action: #selector(quit), keyEquivalent: "q"))
@@ -132,6 +270,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     @objc private func openAbout() {
         SettingsWindowController.shared.showAbout(fans: hub.fans, hub: hub)
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateController.shared.checkForUpdates(nil)
     }
 
     @objc private func quit() {

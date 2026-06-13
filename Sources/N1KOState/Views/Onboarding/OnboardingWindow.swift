@@ -43,16 +43,22 @@ struct OnboardingView: View {
                     .tint(settings.accent)
                 } else {
                     Button(action: finish) {
-                        Text(loc: "Get Started")
+                        Text(loc: "Finish Setup")
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(settings.accent)
+                    .keyboardShortcut(.defaultAction)
                 }
             }
             .padding(20)
         }
         .frame(width: 480, height: 380)
-        .onAppear { fans.refreshHelperStatus() }
+        .onAppear {
+            fans.refreshHelperStatus()
+            advanceAfterHelperReadyIfNeeded()
+        }
+        .onChange(of: page) { _ in advanceAfterHelperReadyIfNeeded() }
+        .onChange(of: fans.helperState) { _ in advanceAfterHelperReadyIfNeeded() }
     }
 
     private var welcomePage: some View {
@@ -162,8 +168,17 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        UserDefaults.standard.set(true, forKey: "didShowOnboarding")
-        onFinish()
+        DispatchQueue.main.async {
+            UserDefaults.standard.set(true, forKey: "didShowOnboarding")
+            onFinish()
+        }
+    }
+
+    private func advanceAfterHelperReadyIfNeeded() {
+        guard page == 1, fans.helperState == .ready else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            if page == 1, fans.helperState == .ready { page = 2 }
+        }
     }
 }
 
@@ -180,7 +195,7 @@ final class OnboardingWindowController {
         }
 
         let hosting = NSHostingController(rootView: OnboardingView(hub: hub) { [weak self] in
-            self?.window?.close()
+            self?.finishAndClose()
         })
         hostingController = hosting
         let w = NSWindow(contentViewController: hosting)
@@ -207,5 +222,13 @@ final class OnboardingWindowController {
         }
         w.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func finishAndClose() {
+        DispatchQueue.main.async {
+            UserDefaults.standard.set(true, forKey: "didShowOnboarding")
+            self.window?.orderOut(nil)
+            self.window?.close()
+        }
     }
 }

@@ -6,6 +6,9 @@ let package = Package(
     platforms: [
         .macOS(.v12)
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.9.3")
+    ],
     targets: [
         // Vendored, MIT-licensed SMC client (from github.com/beltex/SMCKit).
         // Imported as a local module because upstream ships no Package.swift.
@@ -50,7 +53,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "N1KOState",
-            dependencies: ["SMCKit", "IOHIDSensorBridge", "FanXPCShared"],
+            dependencies: [
+                "SMCKit", "IOHIDSensorBridge", "FanXPCShared",
+                .product(name: "Sparkle", package: "Sparkle")
+            ],
             path: "Sources/N1KOState",
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
@@ -59,8 +65,14 @@ let package = Package(
                 .linkedFramework("AppKit"),
                 .linkedFramework("SwiftUI"),
                 .linkedFramework("IOKit"),
-                .linkedFramework("Metal")
+                .linkedFramework("Metal"),
+                .linkedFramework("Security")
             ]
+        ),
+        .testTarget(
+            name: "N1KOStateTests",
+            dependencies: ["N1KOState"],
+            path: "Tests/N1KOStateTests"
         )
     ]
 )

@@ -24,6 +24,29 @@ jobs:
           hdiutil verify build/N1KO-STATE.dmg
           lipo -archs build/N1KO-STATE.app/Contents/MacOS/N1KOState | tr ' ' '\n' | sort | uniq -c
 
+      - name: Generate Sparkle appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$SPARKLE_PRIVATE_KEY" ]]; then
+            echo "::error::Missing SPARKLE_PRIVATE_KEY repository secret"
+            exit 1
+          fi
+          mkdir -p build/sparkle
+          cp build/N1KO-STATE.dmg build/sparkle/N1KO-STATE.dmg
+          TAG="${GITHUB_REF_NAME#v}"
+          NOTES=".github/release-notes/v${TAG}.md"
+          cp "$NOTES" build/sparkle/N1KO-STATE.md
+          printf '%s' "$SPARKLE_PRIVATE_KEY" | \
+            .build/artifacts/sparkle/Sparkle/bin/generate_appcast \
+              --ed-key-file - \
+              --download-url-prefix "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/" \
+              --embed-release-notes \
+              --disable-signing-warning \
+              -o build/appcast.xml \
+              build/sparkle
+          test -f build/appcast.xml
+
       - name: Resolve release notes
         id: notes
         run: |
@@ -39,7 +62,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: N1KO-STATE ${{ github.ref_name }}
-          files: build/N1KO-STATE.dmg
+          files: |
+            build/N1KO-STATE.dmg
+            build/appcast.xml
           body_path: ${{ steps.notes.outputs.path }}
           draft: false
           prerelease: false

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 enum SettingsTab: String, CaseIterable, Identifiable {
@@ -228,10 +229,37 @@ struct SettingsView: View {
                 .frame(minHeight: 180)
             }
             SettingGroup(title: "Layout") {
-                ToggleRow(label: "Compact (combine into one readout)",
-                          isOn: $settings.menuCompact, accent: settings.accent)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) {
+                        ForEach(MenuBarLayout.allCases) { layout in
+                            SegmentChip(label: layout.title.loc,
+                                        selected: settings.resolvedMenuBarLayout == layout,
+                                        accent: settings.accent) {
+                                settings.menuBarLayout = layout.rawValue
+                            }
+                        }
+                    }
+                    MenuBarPreviewView(hub: hub)
+                    HStack {
+                        Spacer()
+                        Button(action: resetMenuBarDefaults) {
+                            Text(loc: "Reset Menu Bar")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
             }
         }
+    }
+
+    private func resetMenuBarDefaults() {
+        settings.menuCPU = true
+        settings.menuGPU = true
+        settings.menuMemory = false
+        settings.menuNetwork = false
+        settings.menuBattery = false
+        settings.menuBarLayout = MenuBarLayout.standard.rawValue
+        settings.menuBarOrder = MenuBarMetric.allCases.map(\.rawValue)
     }
 
     private func menuBarBinding(_ m: MenuBarMetric) -> Binding<Bool> {
@@ -500,7 +528,7 @@ struct SettingsView: View {
     private var aboutPage: some View {
         VStack(alignment: .leading, spacing: 12) {
             SettingsHeader(title: "About")
-            Text(verbatim: "N1KO-STATE \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.2")")
+            Text(verbatim: "N1KO-STATE \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.3")")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(Theme.textPrimary)
             Text(loc: "A modern macOS system monitor.")
@@ -510,6 +538,10 @@ struct SettingsView: View {
                 .font(.system(size: 11))
                 .foregroundColor(Theme.textTertiary)
             HStack(spacing: 8) {
+                Button(action: { UpdateController.shared.checkForUpdates(nil) }) {
+                    Text(loc: "Check for Updates…")
+                }
+                .buttonStyle(.bordered)
                 Button(action: openLogFolder) {
                     Text(loc: "Open Log Folder")
                 }
@@ -582,6 +614,84 @@ struct ToggleRow: View {
         .toggleStyle(.switch)
         .tint(accent)
         .padding(.vertical, 4)
+    }
+}
+
+struct MenuBarPreviewView: View {
+    @ObservedObject var settings = AppSettings.shared
+    var hub: MonitorHub?
+    @State private var previewTick = 0
+
+    var body: some View {
+        let image = previewImage
+        let previewWidth = min(max(image.size.width + 18, 88), 260)
+        let imageScale = min(1, max((previewWidth - 18) / max(image.size.width, 1), 0.1))
+        HStack(spacing: 10) {
+            Text(loc: "Preview")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(Theme.textSecondary)
+            Spacer(minLength: 10)
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(Theme.stroke, lineWidth: 1)
+                    )
+                Image(nsImage: image)
+                    .interpolation(.high)
+                    .frame(width: image.size.width, height: image.size.height)
+                    .scaleEffect(imageScale)
+            }
+            .frame(width: previewWidth, height: 34)
+            Text("\(Int(ceil(image.size.width + 4))) px")
+                .font(.metric(10))
+                .foregroundColor(Theme.textTertiary)
+                .frame(width: 48, alignment: .trailing)
+        }
+        .id(previewTick)
+        .onReceive(Timer.publish(every: 2, on: .main, in: .common).autoconnect()) { _ in
+            previewTick &+= 1
+        }
+    }
+
+    private var previewImage: NSImage {
+        let memFraction: Double
+        if let hub, hub.memory.total > 0 {
+            memFraction = hub.memory.used / hub.memory.total
+        } else {
+            memFraction = 0.58
+        }
+
+        var showCPU = settings.menuCPU
+        var showGPU = settings.menuGPU
+        let showMem = settings.menuMemory
+        let showBat = settings.menuBattery
+        let showNet = settings.menuNetwork
+        if !showCPU && !showGPU && !showMem && !showBat && !showNet {
+            showCPU = true
+            showGPU = true
+        }
+
+        let input = MenuBarImageRenderer.Input(
+            cpu: hub?.cpu.totalUsage ?? 0.42,
+            gpu: hub?.gpu.utilization ?? 0.18,
+            mem: memFraction,
+            battery: (hub?.battery.isPresent ?? true) ? (hub?.battery.percentage ?? 0.86) : nil,
+            batteryCharging: hub?.battery.isCharging ?? false,
+            down: hub?.network.downloadRate ?? 1_250_000,
+            up: hub?.network.uploadRate ?? 280_000,
+            showCPU: showCPU,
+            showGPU: showGPU,
+            showMem: showMem,
+            showBattery: showBat,
+            showNet: showNet,
+            metricOrder: settings.orderedMenuBarMetrics,
+            height: 22,
+            layout: settings.resolvedMenuBarLayout,
+            compact: settings.menuCompact
+        )
+        return MenuBarImageRenderer.render(input)
     }
 }
 

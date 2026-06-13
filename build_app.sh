@@ -58,10 +58,24 @@ echo "==> Assembling $APP_DIR..."
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
+mkdir -p "$APP_DIR/Contents/Frameworks"
 
 cp "$EXE" "$APP_DIR/Contents/MacOS/$PRODUCT"
 cp Resources/Info.plist "$APP_DIR/Contents/Info.plist"
 printf 'APPL????' > "$APP_DIR/Contents/PkgInfo"
+
+# SwiftPM binary frameworks
+SPARKLE_FRAMEWORK=""
+if [[ -d "$BIN_PATH/Sparkle.framework" ]]; then
+    SPARKLE_FRAMEWORK="$BIN_PATH/Sparkle.framework"
+elif [[ -d ".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework" ]]; then
+    SPARKLE_FRAMEWORK=".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+fi
+if [[ -n "$SPARKLE_FRAMEWORK" ]]; then
+    echo "==> Bundling Sparkle.framework..."
+    cp -R "$SPARKLE_FRAMEWORK" "$APP_DIR/Contents/Frameworks/"
+    install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP_DIR/Contents/MacOS/$PRODUCT" 2>/dev/null || true
+fi
 
 # App icon
 if [[ -f Resources/AppIcon.icns ]]; then
@@ -96,16 +110,21 @@ if [[ -n "$TEAM_ID" ]]; then
         /usr/libexec/PlistBuddy -c "Set :N1KOTeamID $TEAM_ID" "$APP_DIR/Contents/Info.plist"
 fi
 
-SIGN_ARGS=(--force --options runtime)
+SIGN_ARGS=(--force)
 if [[ -n "$SIGN_IDENTITY" ]]; then
     echo "==> Developer ID code signing ($SIGN_IDENTITY)..."
-    SIGN_ARGS+=(--sign "$SIGN_IDENTITY")
+    SIGN_ARGS+=(--options runtime --sign "$SIGN_IDENTITY")
 else
     echo "==> Ad-hoc code signing..."
     SIGN_ARGS+=(--sign -)
 fi
 
 HELPER_BIN="$APP_DIR/Contents/MacOS/n1ko-fanctl"
+SPARKLE_BIN="$APP_DIR/Contents/Frameworks/Sparkle.framework"
+if [[ -d "$SPARKLE_BIN" ]]; then
+    codesign "${SIGN_ARGS[@]}" "$SPARKLE_BIN" 2>/dev/null || \
+        echo "   (Sparkle.framework codesign skipped/failed)"
+fi
 if [[ -f "$HELPER_BIN" ]]; then
     codesign "${SIGN_ARGS[@]}" -i "${BUNDLE_ID}.helper" "$HELPER_BIN" 2>/dev/null || \
         echo "   (helper codesign skipped/failed)"
