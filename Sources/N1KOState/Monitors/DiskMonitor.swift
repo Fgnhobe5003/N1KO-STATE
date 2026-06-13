@@ -2,6 +2,8 @@ import Foundation
 import Combine
 import IOKit
 import AppKit
+import Darwin
+import DiskArbitration
 
 struct VolumeInfo: Identifiable {
     let id: String        // mount path
@@ -10,6 +12,17 @@ struct VolumeInfo: Identifiable {
     let free: Double
     var used: Double { max(total - free, 0) }
     var fraction: Double { total > 0 ? used / total : 0 }
+}
+
+struct VolumeFilterTraits {
+    let mountPath: String
+    let totalCapacity: Int
+    let isRoot: Bool
+    let isRemovable: Bool
+    let isEjectable: Bool
+    let isReadOnly: Bool
+    let mountFromName: String?
+    let diskArbitrationDescription: [String]
 }
 
 /// Disk capacity per mounted volume + aggregate read/write throughput via
@@ -89,22 +102,96 @@ final class DiskMonitor: ObservableObject {
         let keys: [URLResourceKey] = [
             .volumeNameKey, .volumeTotalCapacityKey,
             .volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey,
-            .volumeIsBrowsableKey, .volumeIsLocalKey
+            .volumeIsBrowsableKey, .volumeIsLocalKey,
+            .volumeIsRootFileSystemKey, .volumeIsRemovableKey,
+            .volumeIsEjectableKey, .volumeIsReadOnlyKey
         ]
         guard let urls = FileManager.default.mountedVolumeURLs(
             includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) else { return [] }
 
+        let session = DASessionCreate(kCFAllocatorDefault)
         var result: [VolumeInfo] = []
         for url in urls {
             guard let v = try? url.resourceValues(forKeys: Set(keys)),
                   v.volumeIsLocal == true, v.volumeIsBrowsable == true,
                   let total = v.volumeTotalCapacity, total > 0 else { continue }
+            let mountFromName = mountFromName(for: url.path)
+            let traits = VolumeFilterTraits(
+                mountPath: url.path,
+                totalCapacity: total,
+                isRoot: v.volumeIsRootFileSystem == true || url.path == "/",
+                isRemovable: v.volumeIsRemovable == true,
+                isEjectable: v.volumeIsEjectable == true,
+                isReadOnly: v.volumeIsReadOnly == true,
+                mountFromName: mountFromName,
+                diskArbitrationDescription: diskArbitrationDescription(
+                    forMountFromName: mountFromName,
+                    session: session
+                )
+            )
+            guard shouldIncludeVolume(traits) else { continue }
             let free = v.volumeAvailableCapacityForImportantUsage.map { Double($0) }
                 ?? Double(v.volumeAvailableCapacity ?? 0)
             let name = v.volumeName ?? url.lastPathComponent
             result.append(VolumeInfo(id: url.path, name: name, total: Double(total), free: free))
         }
         return result.sorted { ($0.id == "/" ? 0 : 1) < ($1.id == "/" ? 0 : 1) }
+    }
+
+    static func shouldIncludeVolume(_ traits: VolumeFilterTraits) -> Bool {
+        if traits.isRoot { return true }
+        if isDiskImage(traits) { return false }
+        if traits.isRemovable { return true }
+
+        let smallInstallerVolumeLimit = 512 * 1024 * 1024
+        if traits.isReadOnly,
+           traits.isEjectable,
+           !traits.isRemovable,
+           traits.totalCapacity > 0,
+           traits.totalCapacity < smallInstallerVolumeLimit {
+            return false
+        }
+
+        return true
+    }
+
+    private static func isDiskImage(_ traits: VolumeFilterTraits) -> Bool {
+        let candidates = ([traits.mountFromName].compactMap { $0 } + traits.diskArbitrationDescription)
+            .map { $0.lowercased() }
+        return candidates.contains { value in
+            value.contains("disk image") || value.contains("diskimage")
+        }
+    }
+
+    private static func mountFromName(for path: String) -> String? {
+        var fs = statfs()
+        guard statfs(path, &fs) == 0 else { return nil }
+        var mountName = fs.f_mntfromname
+        let capacity = MemoryLayout.size(ofValue: mountName)
+        return withUnsafePointer(to: &mountName) { pointer in
+            pointer.withMemoryRebound(to: CChar.self, capacity: capacity) {
+                String(cString: $0)
+            }
+        }
+    }
+
+    private static func diskArbitrationDescription(forMountFromName mountFromName: String?,
+                                                   session: DASession?) -> [String] {
+        guard let session,
+              let mountFromName,
+              mountFromName.hasPrefix("/dev/") else { return [] }
+        let bsdName = String(mountFromName.dropFirst("/dev/".count))
+        guard let disk = DADiskCreateFromBSDName(kCFAllocatorDefault, session, bsdName),
+              let raw = DADiskCopyDescription(disk) as? [CFString: Any] else {
+            return []
+        }
+        let keys: [CFString] = [
+            kDADiskDescriptionDeviceProtocolKey,
+            kDADiskDescriptionDeviceModelKey,
+            kDADiskDescriptionMediaNameKey,
+            kDADiskDescriptionMediaKindKey
+        ]
+        return keys.compactMap { raw[$0] as? String }
     }
 
     static func totalIO() -> (read: UInt64, write: UInt64) {

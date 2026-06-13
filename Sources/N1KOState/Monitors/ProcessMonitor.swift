@@ -2,7 +2,7 @@ import Foundation
 import Combine
 import Darwin
 
-struct ProcSample: Identifiable {
+struct ProcSample: Identifiable, Equatable {
     let id: Int          // pid
     let name: String
     let cpu: Double       // percent (0...100 per core summed)
@@ -31,9 +31,10 @@ final class ProcessMonitor: ObservableObject {
             let byCPU = Array(samples.sorted { $0.cpu > $1.cpu }.prefix(5))
             let byMem = Array(samples.sorted { $0.memBytes > $1.memBytes }.prefix(5))
             DispatchQueue.main.async {
-                self?.topByCPU = byCPU
-                self?.topByMemory = byMem
-                self?.inFlight = false
+                guard let self else { return }
+                if self.topByCPU != byCPU { self.topByCPU = byCPU }
+                if self.topByMemory != byMem { self.topByMemory = byMem }
+                self.inFlight = false
             }
         }
     }

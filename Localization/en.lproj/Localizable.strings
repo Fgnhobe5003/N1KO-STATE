@@ -242,3 +242,8 @@
 "Mid temp" = "Mid temp";
 "High temp" = "High temp";
 "This device does not support manual fan control." = "This device does not support manual fan control.";
+"Fan control is ready. Continue with the final step." = "Fan control is ready. Continue with the final step.";
+"Close setup guide?" = "Close setup guide?";
+"Setup is not finished yet. If you close it now, it will appear again next time." = "Setup is not finished yet. If you close it now, it will appear again next time.";
+"Keep Setup Open" = "Keep Setup Open";
+"Close" = "Close";

@@ -66,6 +66,7 @@ let package = Package(
                 .linkedFramework("SwiftUI"),
                 .linkedFramework("IOKit"),
                 .linkedFramework("Metal"),
+                .linkedFramework("DiskArbitration"),
                 .linkedFramework("Security")
             ]
         ),

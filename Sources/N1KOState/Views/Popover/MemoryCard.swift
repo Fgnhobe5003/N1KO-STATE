@@ -3,8 +3,10 @@ import SwiftUI
 struct MemoryCard: View {
     @ObservedObject var memory: MemoryMonitor
     @ObservedObject var processes: ProcessMonitor
-    @ObservedObject var settings = AppSettings.shared
+    @ObservedObject private var chartRange = ChartRangeStore.shared
     @State private var processSort: ProcessSortMode = .memory
+    @State private var chartValues: [Double] = []
+    @State private var lastLongRangeRefresh = Date.distantPast
 
     private var pressureColor: Color {
         switch memory.pressureLevel {
@@ -12,11 +14,6 @@ struct MemoryCard: View {
         case .medium: return Theme.warn
         case .high: return Theme.danger
         }
-    }
-
-    private var chartValues: [Double] {
-        let range = HistoryStore.Range(rawValue: settings.chartTimeRange) ?? .m1
-        return HistoryStore.shared.values(for: .memory, range: range, shortWindow: memory.history)
     }
 
     var body: some View {
@@ -28,7 +25,7 @@ struct MemoryCard: View {
                            trailing: Formatters.percent(memory.total > 0 ? memory.used / memory.total : 0),
                            trailingColor: pressureColor)
 
-                ChartRangePicker(range: $settings.chartTimeRange, accent: settings.accent)
+                ChartRangePicker(range: $chartRange.range, accent: Theme.accent)
 
                 MetricChart(values: chartValues, maxValue: 1, color: pressureColor)
                     .frame(height: 40)
@@ -89,6 +86,9 @@ struct MemoryCard: View {
                 }
             }
         }
+        .onAppear { updateChartValues(force: true) }
+        .onChange(of: chartRange.range) { _ in updateChartValues(force: true) }
+        .onChange(of: memory.history) { _ in updateChartValues() }
     }
 
     private func legendRow(_ label: String, _ bytes: Double, _ color: Color, help: String? = nil) -> some View {
@@ -103,5 +103,12 @@ struct MemoryCard: View {
                 .font(.metric(11))
                 .foregroundColor(Theme.textPrimary)
         }
+    }
+
+    private func updateChartValues(force: Bool = false) {
+        let range = chartRange.resolvedRange
+        if !force, range != .m1, Date().timeIntervalSince(lastLongRangeRefresh) < 25 { return }
+        chartValues = HistoryStore.shared.values(for: .memory, range: range, shortWindow: memory.history)
+        if range != .m1 { lastLongRangeRefresh = Date() }
     }
 }

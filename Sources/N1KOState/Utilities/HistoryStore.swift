@@ -37,6 +37,7 @@ final class HistoryStore {
     private let persistInterval: TimeInterval = 300
     private let ioQueue = DispatchQueue(label: "com.n1ko.state.monitor.history", qos: .utility)
     private var diskLoaded = false
+    static let maxDisplaySamples = 180
 
     private init() {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -86,7 +87,19 @@ final class HistoryStore {
         }
         let buf = buffers[series] ?? []
         let n = min(range.sampleCount, buf.count)
-        return n > 0 ? Array(buf.suffix(n)) : []
+        let values = n > 0 ? Array(buf.suffix(n)) : []
+        return Self.downsampleForDisplay(values)
+    }
+
+    static func downsampleForDisplay(_ values: [Double], maxSamples: Int = maxDisplaySamples) -> [Double] {
+        guard maxSamples > 1, values.count > maxSamples else { return values }
+        let bucketSize = Double(values.count) / Double(maxSamples)
+        return (0..<maxSamples).compactMap { bucket in
+            let start = Int((Double(bucket) * bucketSize).rounded(.down))
+            let end = min(values.count, max(start + 1, Int((Double(bucket + 1) * bucketSize).rounded(.down))))
+            guard start < end else { return nil }
+            return values[start..<end].max()
+        }
     }
 
     func snapshot() -> [String: [Double]] {

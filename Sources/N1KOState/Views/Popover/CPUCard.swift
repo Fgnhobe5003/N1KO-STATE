@@ -4,13 +4,10 @@ struct CPUCard: View {
     @ObservedObject var cpu: CPUMonitor
     @ObservedObject var memory: MemoryMonitor
     @ObservedObject var processes: ProcessMonitor
-    @ObservedObject var settings = AppSettings.shared
+    @ObservedObject private var chartRange = ChartRangeStore.shared
     @State private var processSort: ProcessSortMode = .cpu
-
-    private var chartValues: [Double] {
-        let range = HistoryStore.Range(rawValue: settings.chartTimeRange) ?? .m1
-        return HistoryStore.shared.values(for: .cpu, range: range, shortWindow: cpu.history)
-    }
+    @State private var chartValues: [Double] = []
+    @State private var lastLongRangeRefresh = Date.distantPast
 
     var body: some View {
         Card {
@@ -21,7 +18,7 @@ struct CPUCard: View {
                            trailing: Formatters.percent(cpu.totalUsage),
                            trailingColor: Theme.semantic(for: cpu.totalUsage))
 
-                ChartRangePicker(range: $settings.chartTimeRange, accent: settings.accent)
+                ChartRangePicker(range: $chartRange.range, accent: Theme.accent)
 
                 MetricChart(values: chartValues, maxValue: 1,
                             color: Theme.semantic(for: cpu.totalUsage))
@@ -57,5 +54,15 @@ struct CPUCard: View {
                 }
             }
         }
+        .onAppear { updateChartValues(force: true) }
+        .onChange(of: chartRange.range) { _ in updateChartValues(force: true) }
+        .onChange(of: cpu.history) { _ in updateChartValues() }
+    }
+
+    private func updateChartValues(force: Bool = false) {
+        let range = chartRange.resolvedRange
+        if !force, range != .m1, Date().timeIntervalSince(lastLongRangeRefresh) < 25 { return }
+        chartValues = HistoryStore.shared.values(for: .cpu, range: range, shortWindow: cpu.history)
+        if range != .m1 { lastLongRangeRefresh = Date() }
     }
 }

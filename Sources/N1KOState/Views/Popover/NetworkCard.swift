@@ -2,20 +2,13 @@ import SwiftUI
 
 struct NetworkCard: View {
     @ObservedObject var network: NetworkMonitor
-    @ObservedObject var settings = AppSettings.shared
+    @ObservedObject private var chartRange = ChartRangeStore.shared
+    @State private var downChart: [Double] = []
+    @State private var upChart: [Double] = []
+    @State private var lastLongRangeRefresh = Date.distantPast
 
     private let downColor = Theme.info
     private let upColor = Color(hex: 0x32D74B)
-
-    private var downChart: [Double] {
-        let range = HistoryStore.Range(rawValue: settings.chartTimeRange) ?? .m1
-        return HistoryStore.shared.values(for: .netDown, range: range, shortWindow: network.downHistory)
-    }
-
-    private var upChart: [Double] {
-        let range = HistoryStore.Range(rawValue: settings.chartTimeRange) ?? .m1
-        return HistoryStore.shared.values(for: .netUp, range: range, shortWindow: network.upHistory)
-    }
 
     var body: some View {
         Card {
@@ -26,7 +19,7 @@ struct NetworkCard: View {
                            trailing: network.isConnected ? (network.primaryInterface ?? "—") : "Offline".loc,
                            trailingColor: network.isConnected ? Theme.textSecondary : Theme.danger)
 
-                ChartRangePicker(range: $settings.chartTimeRange, accent: settings.accent)
+                ChartRangePicker(range: $chartRange.range, accent: Theme.accent)
 
                 HStack(spacing: 12) {
                     rateBlock(symbol: "arrow.down", label: "Download",
@@ -58,6 +51,10 @@ struct NetworkCard: View {
                 }
             }
         }
+        .onAppear { updateChartValues(force: true) }
+        .onChange(of: chartRange.range) { _ in updateChartValues(force: true) }
+        .onChange(of: network.downHistory) { _ in updateChartValues() }
+        .onChange(of: network.upHistory) { _ in updateChartValues() }
     }
 
     private func rateBlock(symbol: String, label: String, rate: Double, color: Color) -> some View {
@@ -81,5 +78,13 @@ struct NetworkCard: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func updateChartValues(force: Bool = false) {
+        let range = chartRange.resolvedRange
+        if !force, range != .m1, Date().timeIntervalSince(lastLongRangeRefresh) < 25 { return }
+        downChart = HistoryStore.shared.values(for: .netDown, range: range, shortWindow: network.downHistory)
+        upChart = HistoryStore.shared.values(for: .netUp, range: range, shortWindow: network.upHistory)
+        if range != .m1 { lastLongRangeRefresh = Date() }
     }
 }

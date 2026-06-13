@@ -244,3 +244,8 @@
 "Mid temp" = "中溫點";
 "High temp" = "高溫點";
 "This device does not support manual fan control." = "此裝置不支援手動風扇控制。";
+"Fan control is ready. Continue with the final step." = "風扇控制已準備就緒，已進入最後一步。";
+"Close setup guide?" = "關閉設定引導？";
+"Setup is not finished yet. If you close it now, it will appear again next time." = "設定引導尚未完成。現在關閉後，下次開啟仍會顯示。";
+"Keep Setup Open" = "繼續引導";
+"Close" = "關閉";

@@ -7,24 +7,28 @@ struct OnboardingView: View {
     @ObservedObject var settings = AppSettings.shared
     @ObservedObject var fans: FanControlService
     let onFinish: () -> Void
+    let onBringToFront: () -> Void
 
     @State private var page = 0
     @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var helperReadyNotice = false
 
-    init(hub: MonitorHub, onFinish: @escaping () -> Void) {
+    init(hub: MonitorHub, onFinish: @escaping () -> Void, onBringToFront: @escaping () -> Void) {
         self.hub = hub
         self.fans = hub.fans
         self.onFinish = onFinish
+        self.onBringToFront = onBringToFront
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $page) {
-                welcomePage.tag(0)
-                fanAuthPage.tag(1)
-                startupPage.tag(2)
+            Group {
+                switch page {
+                case 0: welcomePage
+                case 1: fanAuthPage
+                default: startupPage
+                }
             }
-            .tabViewStyle(.automatic)
             .frame(height: 300)
 
             HStack {
@@ -144,6 +148,14 @@ struct OnboardingView: View {
             Text(loc: "Startup & Notifications")
                 .font(.system(size: 18, weight: .bold))
 
+            if helperReadyNotice {
+                Label("Fan control is ready. Continue with the final step.".loc,
+                      systemImage: "checkmark.circle.fill")
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundColor(Theme.ok)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             if LoginItem.isAvailable {
                 Toggle(isOn: Binding(
                     get: { launchAtLogin },
@@ -169,7 +181,6 @@ struct OnboardingView: View {
 
     private func finish() {
         DispatchQueue.main.async {
-            UserDefaults.standard.set(true, forKey: "didShowOnboarding")
             onFinish()
         }
     }
@@ -177,55 +188,72 @@ struct OnboardingView: View {
     private func advanceAfterHelperReadyIfNeeded() {
         guard page == 1, fans.helperState == .ready else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            if page == 1, fans.helperState == .ready { page = 2 }
+            guard page == 1, fans.helperState == .ready else { return }
+            helperReadyNotice = true
+            page = 2
+            onBringToFront()
         }
     }
 }
 
-final class OnboardingWindowController {
+final class OnboardingWindowController: NSObject, NSWindowDelegate {
     static let shared = OnboardingWindowController()
     private var window: NSWindow?
     private var hostingController: NSHostingController<OnboardingView>?
-    private var closeObserver: NSObjectProtocol?
+    private var isFinishing = false
 
     func show(hub: MonitorHub) {
         guard window == nil else {
-            window?.makeKeyAndOrderFront(nil)
+            bringToFront()
             return
         }
 
-        let hosting = NSHostingController(rootView: OnboardingView(hub: hub) { [weak self] in
-            self?.finishAndClose()
-        })
+        let hosting = NSHostingController(rootView: OnboardingView(
+            hub: hub,
+            onFinish: { [weak self] in self?.finishAndClose() },
+            onBringToFront: { [weak self] in self?.bringToFront() }
+        ))
         hostingController = hosting
         let w = NSWindow(contentViewController: hosting)
         w.title = "N1KO-STATE"
         w.styleMask = [.titled, .closable]
+        w.level = .floating
+        w.collectionBehavior.insert(.moveToActiveSpace)
         // ARC owns the window via our strong reference; letting AppKit also
         // release it on close would over-release and crash.
         w.isReleasedWhenClosed = false
+        w.delegate = self
         w.center()
         window = w
-        // Tear down on ANY close path (finish callback or the red titlebar
-        // button) so the SwiftUI tree is actually released.
-        closeObserver = NotificationCenter.default.addObserver(
-            forName: NSWindow.willCloseNotification, object: w, queue: .main
-        ) { [weak self] _ in
-            guard let self else { return }
-            if let o = self.closeObserver { NotificationCenter.default.removeObserver(o) }
-            self.closeObserver = nil
-            self.window = nil
-            self.hostingController = nil
-            // Closing via the titlebar button counts as "seen" too — never
-            // re-show onboarding on every launch.
-            UserDefaults.standard.set(true, forKey: "didShowOnboarding")
-        }
-        w.makeKeyAndOrderFront(nil)
+        bringToFront()
+    }
+
+    func bringToFront() {
         NSApp.activate(ignoringOtherApps: true)
+        window?.makeKeyAndOrderFront(nil)
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard !isFinishing else { return true }
+        let alert = NSAlert()
+        alert.messageText = "Close setup guide?".loc
+        alert.informativeText = "Setup is not finished yet. If you close it now, it will appear again next time.".loc
+        alert.addButton(withTitle: "Keep Setup Open".loc)
+        alert.addButton(withTitle: "Close".loc)
+        NSApp.activate(ignoringOtherApps: true)
+        return alert.runModal() == .alertSecondButtonReturn
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        window?.delegate = nil
+        window = nil
+        hostingController = nil
+        isFinishing = false
     }
 
     private func finishAndClose() {
         DispatchQueue.main.async {
+            self.isFinishing = true
             UserDefaults.standard.set(true, forKey: "didShowOnboarding")
             self.window?.orderOut(nil)
             self.window?.close()

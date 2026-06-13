@@ -42,7 +42,7 @@ enum LicenseError: LocalizedError {
     }
 }
 
-/// Future-ready license gate. It is intentionally dormant in 1.0.3 because
+/// Future-ready license gate. It is intentionally dormant in 1.0.4 because
 /// `N1KOLicenseRequired` defaults to false in Info.plist.
 final class LicenseService: ObservableObject {
     static let shared = LicenseService()
