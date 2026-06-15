@@ -8,19 +8,7 @@ struct N1KOStateApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsSceneHost()
-        }
-    }
-}
-
-/// Bridges the system Settings scene (Cmd+,) to the shared `FanControlService`.
-private struct SettingsSceneHost: View {
-    var body: some View {
-        if let fans = AppDelegate.sharedFans {
-            SettingsView(fans: fans, hub: AppDelegate.sharedHub, initialTab: nil)
-        } else {
-            Text(loc: "Loading…")
-                .frame(width: 400, height: 300)
+            SettingsView(fans: appDelegate.hub.fans, hub: appDelegate.hub, initialTab: nil)
         }
     }
 }
