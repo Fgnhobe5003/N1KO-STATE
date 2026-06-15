@@ -12,15 +12,16 @@ enum Theme {
     // MARK: - Appearance
 
     static func applyAppearance(_ mode: String) {
+        let app = NSApplication.shared
         switch mode {
-        case "light": NSApp.appearance = NSAppearance(named: .aqua)
-        case "dark":  NSApp.appearance = NSAppearance(named: .darkAqua)
-        default:      NSApp.appearance = nil
+        case "light": app.appearance = NSAppearance(named: .aqua)
+        case "dark":  app.appearance = NSAppearance(named: .darkAqua)
+        default:      app.appearance = nil
         }
     }
 
     private static var isDark: Bool {
-        NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        NSApplication.shared.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
     }
 
     // MARK: - Surfaces (adaptive)
